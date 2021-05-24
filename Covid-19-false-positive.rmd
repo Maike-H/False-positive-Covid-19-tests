@@ -2,7 +2,7 @@
 title: "Covid-19-false-positive"
 author: "Maike Heinrich"
 date: "24 5 2021"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -22,7 +22,7 @@ N<-100000
 #testing people with probability of getting Covid-19 by Incidence
 outcome<-sample(c("Corona","Healthy"),N,replace=TRUE, prob=c(prev,1-prev))
 N_C<-sum(outcome==("Corona"))
-N_G<-sum(outcome==("Healthy"))
+N_H<-sum(outcome==("Healthy"))
 
 #Accuracy of a Covid-19 Test (99,9%)
 accuracy<-0.999
@@ -30,7 +30,7 @@ accuracy<-0.999
 #Calculating the test-outcome with Bayes' Rule
 test<-vector("character",N)
 test[outcome=="Corona"]<-sample(c("+","-"),N_C,replace=TRUE,prob=c(accuracy,1-accuracy))
-test[outcome=="Healthy"]<-sample(c("-","+"),N_G,replace=TRUE,prob=c(accuracy,1-accuracy))
+test[outcome=="Healthy"]<-sample(c("-","+"),N_H,replace=TRUE,prob=c(accuracy,1-accuracy))
 ```
 
 Creating a tabel for the results where "-" means a negative test, "+" stands for a positive test and "Corona" and "Healthy" for the actual result.
@@ -47,3 +47,8 @@ People who will get a false positive result (This is a random number based on pr
 #Number of people per 100000, getting a false positive result
 result[2,2]
 ```
+
+Probability of being healthy although the test was positive
+```{r probability}
+#Probability in percent of being healthy with getting a positive test
+(1-result[2,2]/result[1,2])*100
