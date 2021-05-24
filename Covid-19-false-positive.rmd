@@ -11,7 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Probability of getting a false positive Covid-19 PCR-test
 
-This code calculates the probability of getting a false positive Covid-19 test using Bayes' rule. In this example the current incidence is set on 150 and the accuracy of the PCR-test is set on 99.9%
+Getting a positive result in a Covid-19 PCR-test doesn't always mean to actually have the disease. While the probability of being actually healthy when getting a negative test-result is almost 100%, the probability of getting a false positive test varies between around 37% and 43%. 
+This means that more than one third of all people, who are tested positive on Covid-19 are actually healthy. This can be explained by Bayes' Rule, which says that one probability affects another. In this case, the probability of getting the disease, which is the incidence and the accuracy of the test, which is around 99.9%.
+The following codes show, how this probability is calculated and name the range of the variation of probabilities to get a false positive Covid-19 test.
+
+In this example the current incidence is set on 150 and the accuracy of the PCR-test is set on 99.9%
 
 ```{r Covid-19 false positive}
 #Covid-19-Incidence of 150/100000 citizens
@@ -52,3 +56,38 @@ Probability of being healthy although the test was positive
 ```{r probability}
 #Probability in percent of being healthy with getting a positive test
 (result[2,2]/(result[2,2]+result[1,2]))*100
+```
+
+Because the upper value is based on probability it is random and varies each time, the code is run. To see the range of this variation a Monte Carlo simulation is made to be able to calculate the 95% confidence intervals - the two probabilities between which 95% of all calculated random probabilities will be found.
+```{r Monte Carlo simulation}
+#Running a Monte Carlo simulation to calculate the 95% confidence interval of this probability
+#samplesize for Monte Carlo simulation
+B<-10000
+MC_prob<-replicate(B,{MC_outcome<-sample(c("Corona","Healthy"),N,replace=TRUE, prob=c(prev,1-prev))
+MC_N_C<-sum(MC_outcome==("Corona"))
+MC_N_H<-sum(MC_outcome==("Healthy"))
+MC_test<-vector("character",N)
+MC_test[MC_outcome=="Corona"]<-sample(c("+","-"),MC_N_C,replace=TRUE,prob=c(accuracy,1-accuracy))
+MC_test[MC_outcome=="Healthy"]<-sample(c("-","+"),MC_N_H,replace=TRUE,prob=c(accuracy,1-accuracy))
+MC_result<-table(MC_outcome,MC_test)
+MC_prob_healthy<-(MC_result[2,2]/(MC_result[2,2]+MC_result[1,2]))*100
+mean(MC_prob_healthy)
+})
+mean(MC_prob)
+```
+
+Now the confidence interval can be calculated
+```{r confidence interval}
+#Calculation for 95% confidence interval
+N<-1000 #samplesize for standard error
+X_hat<-mean(MC_prob)/100 #expected value
+SE_hat<-sqrt(X_hat*(1-X_hat)/N) #standard error
+ci<-c(lower<-X_hat-qnorm(0.975)*SE_hat,upper<-X_hat+qnorm(0.975)*SE_hat)
+ci
+```
+
+In between this range, 95% of the calculated probabilities of being healthy although being tested positiv for Covid-19 can be found.
+```{r probabiliy range}
+ci[1]*100
+ci[2]*100
+```

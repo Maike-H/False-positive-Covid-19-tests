@@ -419,7 +419,8 @@ summary {
 
 <div id="probability-of-getting-a-false-positive-covid-19-pcr-test" class="section level2">
 <h2>Probability of getting a false positive Covid-19 PCR-test</h2>
-<p>This code calculates the probability of getting a false positive Covid-19 test using Bayes’ rule. In this example the current incidence is set on 150 and the accuracy of the PCR-test is set on 99.9%</p>
+<p>Getting a positive result in a Covid-19 PCR-test doesn’t always mean to actually have the disease. While the probability of being actually healthy when getting a negative test-result is almost 100%, the probability of getting a false positive test varies between around 37% and 43%. This means that more than one third of all people, who are tested positive on Covid-19 are actually healthy. This can be explained by Bayes’ Rule, which says that one probability affects another. In this case, the probability of getting the disease, which is the incidence and the accuracy of the test, which is around 99.9%. The following codes show, how this probability is calculated and name the range of the variation of probabilities to get a false positive Covid-19 test.</p>
+<p>In this example the current incidence is set on 150 and the accuracy of the PCR-test is set on 99.9%</p>
 <pre class="r"><code>#Covid-19-Incidence of 150/100000 citizens
 prev&lt;-0.00150
 #number of people tested
@@ -443,16 +444,45 @@ result&lt;-table(outcome,test)
 result</code></pre>
 <pre><code>##          test
 ## outcome       -     +
-##   Corona      0   166
-##   Healthy 99731   103</code></pre>
+##   Corona      0   135
+##   Healthy 99764   101</code></pre>
 <p>People who will get a false positive result (This is a random number based on probability and will vary every time this code will be run)</p>
 <pre class="r"><code>#Number of people per 100000, getting a false positive result
 result[2,2]</code></pre>
-<pre><code>## [1] 103</code></pre>
+<pre><code>## [1] 101</code></pre>
 <p>Probability of being healthy although the test was positive</p>
 <pre class="r"><code>#Probability in percent of being healthy with getting a positive test
 (result[2,2]/(result[2,2]+result[1,2]))*100</code></pre>
-<pre><code>## [1] 38.28996</code></pre>
+<pre><code>## [1] 42.79661</code></pre>
+<p>Because the upper value is based on probability it is random and varies each time, the code is run. To see the range of this variation a Monte Carlo simulation is made to be able to calculate the 95% confidence intervals - the two probabilities between which 95% of all calculated random probabilities will be found.</p>
+<pre class="r"><code>#Running a Monte Carlo simulation to calculate the 95% confidence interval of this probability
+#samplesize for Monte Carlo simulation
+B&lt;-10000
+MC_prob&lt;-replicate(B,{MC_outcome&lt;-sample(c(&quot;Corona&quot;,&quot;Healthy&quot;),N,replace=TRUE, prob=c(prev,1-prev))
+MC_N_C&lt;-sum(MC_outcome==(&quot;Corona&quot;))
+MC_N_H&lt;-sum(MC_outcome==(&quot;Healthy&quot;))
+MC_test&lt;-vector(&quot;character&quot;,N)
+MC_test[MC_outcome==&quot;Corona&quot;]&lt;-sample(c(&quot;+&quot;,&quot;-&quot;),MC_N_C,replace=TRUE,prob=c(accuracy,1-accuracy))
+MC_test[MC_outcome==&quot;Healthy&quot;]&lt;-sample(c(&quot;-&quot;,&quot;+&quot;),MC_N_H,replace=TRUE,prob=c(accuracy,1-accuracy))
+MC_result&lt;-table(MC_outcome,MC_test)
+MC_prob_healthy&lt;-(MC_result[2,2]/(MC_result[2,2]+MC_result[1,2]))*100
+mean(MC_prob_healthy)
+})
+mean(MC_prob)</code></pre>
+<pre><code>## [1] 39.97009</code></pre>
+<p>Now the confidence interval can be calculated</p>
+<pre class="r"><code>#Calculation for 95% confidence interval
+N&lt;-1000 #samplesize for standard error
+X_hat&lt;-mean(MC_prob)/100 #expected value
+SE_hat&lt;-sqrt(X_hat*(1-X_hat)/N) #standard error
+ci&lt;-c(lower&lt;-X_hat-qnorm(0.975)*SE_hat,upper&lt;-X_hat+qnorm(0.975)*SE_hat)
+ci</code></pre>
+<pre><code>## [1] 0.3693410 0.4300607</code></pre>
+<p>In between this range, 95% of the calculated probabilities of being healthy although being tested positiv for Covid-19 can be found.</p>
+<pre class="r"><code>ci[1]*100</code></pre>
+<pre><code>## [1] 36.9341</code></pre>
+<pre class="r"><code>ci[2]*100</code></pre>
+<pre><code>## [1] 43.00607</code></pre>
 </div>
 
 
