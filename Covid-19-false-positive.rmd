@@ -2,7 +2,7 @@
 title: "Covid-19-false-positive"
 author: "Maike Heinrich"
 date: "24 5 2021"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -51,4 +51,4 @@ result[2,2]
 Probability of being healthy although the test was positive
 ```{r probability}
 #Probability in percent of being healthy with getting a positive test
-(1-result[2,2]/result[1,2])*100
+(result[2,2]/(result[2,2]+result[1,2]))*100

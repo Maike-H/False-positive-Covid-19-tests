@@ -24,4 +24,4 @@ result
 result[2,2]
 
 #Probability in percent of being healthy with getting a positive test
-(1-result[2,2]/result[1,2])*100
+(result[2,2]/(result[2,2]+result[1,2]))*100
