@@ -1,0 +1,49 @@
+---
+title: "Covid-19-false-positive"
+author: "Maike Heinrich"
+date: "24 5 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Probability of getting a false positive Covid-19 PCR-test
+
+This code calculates the probability of getting a false positive Covid-19 test using Bayes' rule. In this example the current incidence is set on 150 and the accuracy of the PCR-test is set on 99.9%
+
+```{r Covid-19 false positive}
+#Covid-19-Incidence of 150/100000 citizens
+prev<-0.00150
+#number of people tested
+N<-100000
+
+#testing people with probability of getting Covid-19 by Incidence
+outcome<-sample(c("Corona","Healthy"),N,replace=TRUE, prob=c(prev,1-prev))
+N_C<-sum(outcome==("Corona"))
+N_G<-sum(outcome==("Healthy"))
+
+#Accuracy of a Covid-19 Test (99,9%)
+accuracy<-0.999
+
+#Calculating the test-outcome with Bayes' Rule
+test<-vector("character",N)
+test[outcome=="Corona"]<-sample(c("+","-"),N_C,replace=TRUE,prob=c(accuracy,1-accuracy))
+test[outcome=="Healthy"]<-sample(c("-","+"),N_G,replace=TRUE,prob=c(accuracy,1-accuracy))
+```
+
+Creating a tabel for the results where "-" means a negative test, "+" stands for a positive test and "Corona" and "Healthy" for the actual result.
+```{r table for test results}
+
+#Creating a table for the outcome
+result<-table(outcome,test)
+result
+```
+
+People who will get a false positive result (This is a random number based on probability and will vary every time this code will be run)
+```{r false positive tests}
+
+#Number of people per 100000, getting a false positive result
+result[2,2]
+```
