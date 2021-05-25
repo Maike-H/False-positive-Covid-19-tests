@@ -419,70 +419,108 @@ summary {
 
 <div id="probability-of-getting-a-false-positive-covid-19-pcr-test" class="section level2">
 <h2>Probability of getting a false positive Covid-19 PCR-test</h2>
-<p>Getting a positive result in a Covid-19 PCR-test doesn’t always mean to actually have the disease. While the probability of being actually healthy when getting a negative test-result is almost 100%, the probability of getting a false positive test varies between around 37% and 43%. This means that more than one third of all people, who are tested positive on Covid-19 are actually healthy. This can be explained by Bayes’ Rule, which says that one probability affects another. In this case, the probability of getting the disease, which is the incidence and the accuracy of the test, which is around 99.9%. The following codes show, how this probability is calculated and name the range of the variation of probabilities to get a false positive Covid-19 test.</p>
-<p>In this example the current incidence is set on 150 and the accuracy of the PCR-test is set on 99.9%</p>
+<p>Getting a positive result in a Covid-19 PCR-test doesn’t always mean to actually have the disease. While the probability of being actually healthy when getting a negative test-result is almost 100%, the probability of getting a false positive test is around 42%. This means that almost half of all people, who are tested positive on Covid-19 are actually healthy. This can be explained by Bayes’ Rule, which says that one probability affects another. In this case, the probability of getting the disease, which is the incidence and the accuracy of the test. A PCR test has a specificity of around 99.9%, which means the rate for correctly detecting negative results, and a sensitivity of around 90% - the detection rate for positive results. According to experts, the error rate is nevertheless quite small as many laboratories repeat positive tests.</p>
+</div>
+<div id="probability-of-getting-a-false-positive-covid-19-self-test" class="section level2">
+<h2>Probability of getting a false positive Covid-19 self test</h2>
+<p>A quite reliable result is not the case for quick- and self tests. Although their accuracy has to be at least 97% in detecting correctly negative results, according to specifications of the World Health Organization, the false positive rate is exorbitant higher. While a negative test is reliable in 97% of the cases, the probability of getting a positive result and actually being healthy is about 96%. This illustrates the necessity of repeating a positive test by a PCR test in a laboratory.</p>
+<p>The following codes show, how this probability is calculated and name the range of the variation of probabilities to get a false positive Covid-19 test.</p>
+<p>In this example the current incidence is set on 150 and the specificity of the PCR-test is set on 99.9%, the specificity of a self test is set on 97%</p>
 <pre class="r"><code>#Covid-19-Incidence of 150/100000 citizens
 prev&lt;-0.00150
 #number of people tested
 N&lt;-100000
 
-#testing people with probability of getting Covid-19 by Incidence
+#probability of getting Covid-19 by Incidence
 outcome&lt;-sample(c(&quot;Corona&quot;,&quot;Healthy&quot;),N,replace=TRUE, prob=c(prev,1-prev))
 N_C&lt;-sum(outcome==(&quot;Corona&quot;))
 N_H&lt;-sum(outcome==(&quot;Healthy&quot;))
 
 #Accuracy of a Covid-19 Test (99,9%)
-accuracy&lt;-0.999
+specitivity&lt;-0.999
+sensitivity&lt;-0.9
 
 #Calculating the test-outcome with Bayes&#39; Rule
 test&lt;-vector(&quot;character&quot;,N)
-test[outcome==&quot;Corona&quot;]&lt;-sample(c(&quot;+&quot;,&quot;-&quot;),N_C,replace=TRUE,prob=c(accuracy,1-accuracy))
-test[outcome==&quot;Healthy&quot;]&lt;-sample(c(&quot;-&quot;,&quot;+&quot;),N_H,replace=TRUE,prob=c(accuracy,1-accuracy))</code></pre>
+test[outcome==&quot;Corona&quot;]&lt;-sample(c(&quot;+&quot;,&quot;-&quot;),N_C,replace=TRUE,prob=c(sensitivity,1-sensitivity))
+test[outcome==&quot;Healthy&quot;]&lt;-sample(c(&quot;-&quot;,&quot;+&quot;),N_H,replace=TRUE,prob=c(specitivity,1-specitivity))</code></pre>
 <p>Creating a tabel for the results where “-” means a negative test, “+” stands for a positive test and “Corona” and “Healthy” for the actual result.</p>
 <pre class="r"><code>#Creating a table for the outcome
 result&lt;-table(outcome,test)
 result</code></pre>
 <pre><code>##          test
 ## outcome       -     +
-##   Corona      0   135
-##   Healthy 99764   101</code></pre>
+##   Corona     18   130
+##   Healthy 99750   102</code></pre>
 <p>People who will get a false positive result (This is a random number based on probability and will vary every time this code will be run)</p>
 <pre class="r"><code>#Number of people per 100000, getting a false positive result
 result[2,2]</code></pre>
-<pre><code>## [1] 101</code></pre>
+<pre><code>## [1] 102</code></pre>
 <p>Probability of being healthy although the test was positive</p>
 <pre class="r"><code>#Probability in percent of being healthy with getting a positive test
 (result[2,2]/(result[2,2]+result[1,2]))*100</code></pre>
-<pre><code>## [1] 42.79661</code></pre>
-<p>Because the upper value is based on probability it is random and varies each time, the code is run. To see the range of this variation a Monte Carlo simulation is made to be able to calculate the 95% confidence intervals - the two probabilities between which 95% of all calculated random probabilities will be found.</p>
+<pre><code>## [1] 43.96552</code></pre>
+<p>Because this value is based on probability it is random and varies each time, the code is run. To see the range of this variation a Monte Carlo simulation is made to be able to calculate the 95% confidence intervals - the two probabilities between which 95% of all calculated random probabilities will be found.</p>
 <pre class="r"><code>#Running a Monte Carlo simulation to calculate the 95% confidence interval of this probability
 #samplesize for Monte Carlo simulation
 B&lt;-10000
-MC_prob&lt;-replicate(B,{MC_outcome&lt;-sample(c(&quot;Corona&quot;,&quot;Healthy&quot;),N,replace=TRUE, prob=c(prev,1-prev))
-MC_N_C&lt;-sum(MC_outcome==(&quot;Corona&quot;))
-MC_N_H&lt;-sum(MC_outcome==(&quot;Healthy&quot;))
-MC_test&lt;-vector(&quot;character&quot;,N)
-MC_test[MC_outcome==&quot;Corona&quot;]&lt;-sample(c(&quot;+&quot;,&quot;-&quot;),MC_N_C,replace=TRUE,prob=c(accuracy,1-accuracy))
-MC_test[MC_outcome==&quot;Healthy&quot;]&lt;-sample(c(&quot;-&quot;,&quot;+&quot;),MC_N_H,replace=TRUE,prob=c(accuracy,1-accuracy))
-MC_result&lt;-table(MC_outcome,MC_test)
-MC_prob_healthy&lt;-(MC_result[2,2]/(MC_result[2,2]+MC_result[1,2]))*100
-mean(MC_prob_healthy)
+MC_prob&lt;-replicate(B,{MC_test&lt;-vector(&quot;character&quot;,N)
+MC_test[outcome==&quot;Corona&quot;]&lt;-sample(c(&quot;+&quot;,&quot;-&quot;),N_C,replace=TRUE,prob=c(sensitivity,1-sensitivity))
+MC_test[outcome==&quot;Healthy&quot;]&lt;-sample(c(&quot;-&quot;,&quot;+&quot;),N_H,replace=TRUE,prob=c(specitivity,1-specitivity))
+MC_result&lt;-table(outcome,MC_test)
+(MC_result[2,2]/(MC_result[2,2]+MC_result[1,2]))*100
 })
 mean(MC_prob)</code></pre>
-<pre><code>## [1] 39.97009</code></pre>
+<pre><code>## [1] 42.71965</code></pre>
 <p>Now the confidence interval can be calculated</p>
 <pre class="r"><code>#Calculation for 95% confidence interval
-N&lt;-1000 #samplesize for standard error
+N_se&lt;-1000 #samplesize for standard error
 X_hat&lt;-mean(MC_prob)/100 #expected value
-SE_hat&lt;-sqrt(X_hat*(1-X_hat)/N) #standard error
+SE_hat&lt;-sqrt(X_hat*(1-X_hat)/N_se) #standard error
 ci&lt;-c(lower&lt;-X_hat-qnorm(0.975)*SE_hat,upper&lt;-X_hat+qnorm(0.975)*SE_hat)
 ci</code></pre>
-<pre><code>## [1] 0.3693410 0.4300607</code></pre>
+<pre><code>## [1] 0.396537 0.457856</code></pre>
 <p>In between this range, 95% of the calculated probabilities of being healthy although being tested positiv for Covid-19 can be found.</p>
 <pre class="r"><code>ci[1]*100</code></pre>
-<pre><code>## [1] 36.9341</code></pre>
+<pre><code>## [1] 39.6537</code></pre>
 <pre class="r"><code>ci[2]*100</code></pre>
-<pre><code>## [1] 43.00607</code></pre>
+<pre><code>## [1] 45.7856</code></pre>
+<p>Now to illustrate the huge difference to the false positive results of a self test the codes below show the calculation for a test with the specificity of 97% to correctly detect negative results and the sensitivity of 80% for correct positives.</p>
+<pre class="r"><code>specificity_st&lt;-0.97
+sensitivity_st&lt;-0.8
+test_st&lt;-vector(&quot;character&quot;,N)
+test_st[outcome==&quot;Corona&quot;]&lt;-sample(c(&quot;+&quot;,&quot;-&quot;),N_C,replace=TRUE,prob=c(sensitivity_st,1-sensitivity_st))
+test_st[outcome==&quot;Healthy&quot;]&lt;-sample(c(&quot;-&quot;,&quot;+&quot;),N_H,replace=TRUE,prob=c(specificity_st,1-specificity_st))</code></pre>
+<p>Table of the results of a self test</p>
+<pre class="r"><code>result_st&lt;-table(outcome,test_st)
+result_st</code></pre>
+<pre><code>##          test_st
+## outcome       -     +
+##   Corona     32   116
+##   Healthy 96883  2969</code></pre>
+<p>Probability for a false positive self test</p>
+<pre class="r"><code>prob_healthy_st&lt;-(result_st[2,2]/(result_st[2,2]+result_st[1,2]))*100
+prob_healthy_st</code></pre>
+<pre><code>## [1] 96.23987</code></pre>
+<p>Range of probabilities for getting a false positive self test</p>
+<pre class="r"><code>MC_prob_st&lt;-replicate(B,{MC_test_st&lt;-vector(&quot;character&quot;,N)
+MC_test_st[outcome==&quot;Corona&quot;]&lt;-sample(c(&quot;+&quot;,&quot;-&quot;),N_C,replace=TRUE,prob=c(sensitivity_st,1-sensitivity_st))
+MC_test_st[outcome==&quot;Healthy&quot;]&lt;-sample(c(&quot;-&quot;,&quot;+&quot;),N_H,replace=TRUE,prob=c(specificity_st,1-specificity_st))
+MC_result_st&lt;-table(outcome,MC_test_st)
+(MC_result_st[2,2]/(MC_result_st[2,2]+MC_result_st[1,2]))*100})
+mean(MC_prob_st)</code></pre>
+<pre><code>## [1] 96.19788</code></pre>
+<pre class="r"><code>#confidence interval
+X_hat_st&lt;-mean(MC_prob_st)/100 #expected value
+SE_hat_st&lt;-sqrt(X_hat_st*(1-X_hat_st)/N_se) #standard error
+ci_st&lt;-c(lower_st&lt;-X_hat_st-qnorm(0.975)*SE_hat_st,upper_st&lt;-X_hat_st+qnorm(0.975)*SE_hat_st)
+ci_st</code></pre>
+<pre><code>## [1] 0.9501254 0.9738322</code></pre>
+<p>The 95% range of probabilities of getting a false positive Covid-19 selftest is between these two percentages. So repeating the test is recommended.</p>
+<pre class="r"><code>ci_st[1]*100</code></pre>
+<pre><code>## [1] 95.01254</code></pre>
+<pre class="r"><code>ci_st[2]*100</code></pre>
+<pre><code>## [1] 97.38322</code></pre>
 </div>
 
 
